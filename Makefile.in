@@ -477,7 +477,7 @@ LIBRARY_SOURCE = $(SHLIB_SOURCE) $(GLOB_SOURCE) \
 #
 
 # The main source code for the Bourne Again SHell.
-CSOURCES = shell.c eval.c parse.y general.c make_cmd.c print_cmd.c y.tab.c \
+CSOURCES = shell.c eval.c bash_event.c parse.y general.c make_cmd.c print_cmd.c y.tab.c \
 	   dispose_cmd.c execute_cmd.c variables.c version.c \
 	   expr.c copy_cmd.c flags.c subst.c hashcmd.c hashlib.c mailcheck.c \
 	   test.c trap.c alias.c jobs.c nojobs.c braces.c \
@@ -493,7 +493,7 @@ HSOURCES = shell.h flags.h trap.h hashcmd.h hashlib.h jobs.h builtins.h \
 	   subst.h externs.h siglist.h bashhist.h bashline.h bashtypes.h \
 	   array.h arrayfunc.h sig.h mailcheck.h bashintl.h bashjmp.h \
 	   execute_cmd.h parser.h pathexp.h pathnames.h pcomplete.h assoc.h \
-	   $(BASHINCFILES)
+	   bash_event.h $(BASHINCFILES)
 
 SOURCES	 = $(CSOURCES) $(HSOURCES) $(BUILTIN_DEFS)
 
@@ -526,7 +526,7 @@ SIGNAMES_O = @SIGNAMES_O@
 ARRAY_O = @ARRAY_O@
 
 # Matching object files.
-OBJECTS	 = shell.o eval.o y.tab.o general.o make_cmd.o print_cmd.o \
+OBJECTS	 = shell.o eval.o bash_event.o y.tab.o general.o make_cmd.o print_cmd.o \
 	   dispose_cmd.o execute_cmd.o variables.o copy_cmd.o error.o \
 	   expr.o flags.o $(JOBS_O) subst.o hashcmd.o hashlib.o mailcheck.o \
 	   trap.o input.o unwind_prot.o pathexp.o sig.o test.o version.o \

@@ -69,6 +69,7 @@ extern int get_tty_state (void);
 #include "input.h"
 #include "execute_cmd.h"
 #include "findcmd.h"
+#include "bash_event.h"
 
 #if defined (USING_BASH_MALLOC) && defined (DEBUG) && !defined (DISABLE_MALLOC_WRAPPERS)
 #  include <malloc/shmalloc.h>
@@ -1038,6 +1039,9 @@ exit_shell (int s)
 void
 sh_exit (int s)
 {
+  /* termx: close the event channel before the process goes away. */
+  bash_event_shutdown ();
+
 #if defined (MALLOC_DEBUG) && defined (USING_BASH_MALLOC)
   if (malloc_trace_at_exit && (subshell_environment & (SUBSHELL_COMSUB|SUBSHELL_PROCSUB)) == 0)
     trace_malloc_stats (get_name_for_error (), NULL);

@@ -44,6 +44,8 @@
 #include "input.h"
 #include "execute_cmd.h"
 
+#include "bash_event.h"
+
 #if defined (HISTORY)
 #  include "bashhist.h"
 #endif
@@ -90,6 +92,9 @@ reader_loop (void)
       if (code != NOT_JUMPED)
 	{
 	  indirection_level = our_indirection_level;
+
+	  /* termx: a top-level jump may abandon the command that was running. */
+	  bash_event_reader_jump (code, last_command_exit_value);
 
 	  switch (code)
 	    {
@@ -156,6 +161,15 @@ reader_loop (void)
 	    {
 	      global_command = (COMMAND *)NULL;
 
+	      /* termx: command start. make_command_string returns a static
+		 buffer, so the hook must copy before the next call. */
+	      {
+		char *termx_command_text;
+
+		termx_command_text = make_command_string (current_command);
+		bash_event_command_start (termx_command_text);
+	      }
+
 	      /* If the shell is interactive, expand and display $PS0 after reading a
 		 command (possibly a list or pipeline) and before executing it. */
 	      if (interactive && ps0_prompt)
@@ -182,6 +196,9 @@ reader_loop (void)
 
 	      execute_command (current_command);
 
+	      /* termx: command end uses the shell's authoritative status. */
+	      bash_event_command_end (last_command_exit_value);
+
 	    exec_done:
 	      QUIT;
 
@@ -202,6 +219,8 @@ reader_loop (void)
 	  /* Parse error, maybe discard rest of stream if not interactive. */
 	  if (interactive == 0)
 	    EOF_Reached = EOF;
+	  else
+	    bash_event_command_abort ();	/* termx: input never executed */
 	}
       if (just_one_command)
 	EOF_Reached = EOF;
@@ -351,16 +370,26 @@ parse_command (void)
      actually printed. */
   if (interactive && bash_input.type != st_string && parser_expanding_alias() == 0)
     {
+      int termx_prompt_shown;
+
+      termx_prompt_shown = 0;
 #if defined (JOB_CONTROL)
       notify_and_cleanup (-1);
 #endif
 #if defined (READLINE)
       if (no_line_editing || (bash_input.type == st_stdin && parser_will_prompt ()))
 #endif
-        execute_prompt_command ();
+	{
+	  termx_prompt_shown = 1;
+	  bash_event_prompt_start ();	/* termx: A */
+	  execute_prompt_command ();
+	}
 
       if (running_under_emacs == 2)
 	send_pwd_to_eterm ();	/* Yuck */
+
+      if (termx_prompt_shown)
+	bash_event_prompt_end ();	/* termx: B */
     }
 
   old_parsing = parsing_command;

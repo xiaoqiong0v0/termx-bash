@@ -44,6 +44,7 @@ $END
 #include "../execute_cmd.h"
 #include "../jobs.h"
 #include "../trap.h"
+#include "../bash_event.h"
 
 #include "common.h"
 #include "builtext.h"	/* for jobs_builtin */
@@ -147,6 +148,9 @@ exit_or_logout (WORD_LIST *list)
   bash_logout ();
 
   last_command_exit_value = exit_value;
+
+  /* termx: `exit' longjmps past reader_loop's command-end hook. */
+  bash_event_command_end (last_command_exit_value);
 
   /* Exit the program. */
   jump_to_top_level (EXITBLTIN);
